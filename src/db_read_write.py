@@ -10,7 +10,7 @@ import sqlite3 as lite
 class DBError(Exception):
     pass
 
-class Fantasy_DB:
+class Fantasy_DB(lite.Connection):
     '''
     Database connection class to handle DB read/write operations specific
     to this project.
@@ -20,31 +20,12 @@ class Fantasy_DB:
         '''
         Open connection
         '''
-        self.db_name = db_name
-        self.open(db_name)
-    
-    def open(self, db_name):
-        '''
-        Open a connection
-        '''
-        self.conn = lite.connect(db_name)
-        self.cur = self.conn.cursor()
+        lite.Connection.__init__(self, db_name)
+        self.cur = self.cursor()
         self.is_open = True
+
     
-    def close(self):
-        '''
-        Close a connection
-        '''
-        self.conn.close()
-        self.is_open = False
-    
-    def is_open(self):
-        '''
-        Check to see if connection is open
-        '''
-        return self.is_open
-    
-    def write_db(self, players, tbl_name):
+    def write_table(self, players, tbl_name):
         '''
         Write player info to DB.  Note that players will be a list of
         dictionaries, whose keys must match the fields in the table located
@@ -80,7 +61,7 @@ class Fantasy_DB:
         fields = [x[1] for x in data]
         
         # Get rows matching criteria
-        self.conn.row_factory = lite.Row
+        self.row_factory = lite.Row
         query = 'select * from ' + tbl_name + ' where week = ' + str(week)
         self.cur.execute(query)
         rows = self.cur.fetchall()

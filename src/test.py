@@ -11,9 +11,9 @@ class ProjectTests(unittest.TestCase):
     def setUp(self):
         pass
     
-from data_aggregation import *
-from db_read_write import *
-from optimization import *
+#from data_aggregation import *
+#from db_read_write import *
+#from optimization import *
 
 # Create DB and write to
 db_name = 'junkme'
@@ -34,14 +34,14 @@ dst = get_dst_data(week)
 matchup = get_matchup(week)
 
 # Write to DB
-db.write_db(fan_duel, 'fan_duel')
-db.write_db(qb, 'offensive')
-db.write_db(rb, 'offensive')
-db.write_db(te, 'offensive')
-db.write_db(wr, 'offensive')
-db.write_db(kicker, 'kicker')
-db.write_db(dst, 'dst')
-db.write_db(matchup, 'matchups')
+db.write_table(fan_duel, 'fan_duel')
+db.write_table(qb, 'offensive')
+db.write_table(rb, 'offensive')
+db.write_table(te, 'offensive')
+db.write_table(wr, 'offensive')
+db.write_table(kicker, 'kicker')
+db.write_table(dst, 'dst')
+db.write_table(matchup, 'matchups')
 
 # Now read these players from the DB
 players = db.read_table('fan_duel', week_fd)
