@@ -40,7 +40,7 @@ players = read_players_db(db_name, tbl_name, week_fd)
 
 force_in = []
 force_out = []
-salary_cap = 41000
+salary_cap = 60000
 
 lineup = optimize_lineup(players, force_in, force_out, salary_cap)
 lineup.get_players()
