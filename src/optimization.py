@@ -8,6 +8,10 @@ import cvxpy as cvx
 import numpy as np
 from scipy import sparse
 
+class LineupError(Exception):
+    pass
+
+
 class Lineup(object):
     '''
     Object to organize lineups neatly
@@ -20,9 +24,8 @@ class Lineup(object):
     
     def get_players(self):
         return [player['name'] for player in self.players]
-    
-        
-        
+
+
 def optimize_lineup(player_list, force_in, force_out, salary_cap):
     """
     Maximize fantasy points subject to salary cap and position constraints
@@ -88,6 +91,10 @@ def optimize_lineup(player_list, force_in, force_out, salary_cap):
     objective = cvx.Maximize(players.T*pred_points)                                                                                                                                              
     prob = cvx.Problem(objective, constraints) 
     prob.solve(solver=cvx.GUROBI, verbose=False)
+    
+    # Raise an error if solver fails, or if optimal value is 'None'
+    if (players.value is None) or  prob.status != 'optimal':
+        raise LineupError('Failed to Solve: check salary_cap!')
     
     # Return lineup as a nice object
     return Lineup(player_list, players.value)

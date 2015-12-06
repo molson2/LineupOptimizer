@@ -7,136 +7,196 @@ Created on Tue Dec  1 21:22:11 2015
 
 import sqlite3 as lite
 
+class DBError(Exception):
+    pass
 
-def init_db(db_name):
+class Fantasy_DB:
     '''
-    Function to initialize tables in a databse to hold fantasy football data
-    '''
-    conn = lite.connect(db_name)
-    cur = conn.cursor() 
-    offensive = '''CREATE TABLE offensive(name TEXT,
-                                          team TEXT,
-                                          pos TEXT,
-                                          pass_att REAL,
-                                          pass_cmp REAL,
-                                          pass_int REAL,
-                                          pass_rating REAL,
-                                          pass_td REAL,
-                                          pass_yd REAL,
-                                          rush_att REAL,
-                                          rush_avg REAL,
-                                          rush_yd REAL,
-                                          rush_td REAL,
-                                          rec_target REAL,
-                                          rec_reception REAL,
-                                          rec_yd REAL,
-                                          rec_td REAL,
-                                          rec_avg REAL,
-                                          week REAL)'''
-    
-    dst = '''CREATE TABLE dst(name TEXT,
-                              team TEXT,
-                              int REAL, 
-                              sty REAL,
-                              sacks REAL,
-                              tk REAL,
-                              dfr REAL,
-                              ff REAL,
-                              dtd REAL,
-                              paneta REAL,
-                              ruyda REAL,
-                              tyda REAL,
-                              week REAL)'''
-    
-    k = '''CREATE TABLE kicker(name TEXT,
-                               team TEXT,
-                               fg REAL,
-                               fga REAL,
-                               fglg REAL,
-                               xp REAL,
-                               xpatt REAL,
-                               xpb REAL,
-                               week REAL)
+    Database connection class to handle DB read/write operations specific
+    to this project.
     '''
     
-    fan_duel = '''CREATE TABLE fan_duel(name TEXT,
-                                        team TEXT,
-                                        pos TEXT,
-                                        opp TEXT,
-                                        location TEXT,
-                                        injury TEXT,
-                                        ml REAL,
-                                        ou REAL,
-                                        spread REAL,
-                                        salary REAL,
-                                        pred_points REAL,
-                                        week REAL)
-    '''
+    def __init__(self, db_name):
+        '''
+        Open connection
+        '''
+        self.db_name = db_name
+        self.open(db_name)
     
-    matchups = ''' CREATE TABLE matchups(away TEXT,
-                                         away_score REAL,
-                                         home TEXT,
-                                         home_score REAL,
-                                         week REAL)
-    '''
+    def open(self, db_name):
+        '''
+        Open a connection
+        '''
+        self.conn = lite.connect(db_name)
+        self.cur = self.conn.cursor()
+        self.is_open = True
     
+    def close(self):
+        '''
+        Close a connection
+        '''
+        self.conn.close()
+        self.is_open = False
     
-    offensive = offensive.replace('\n','')
-    dst = dst.replace('\n', '')
-    k = k.replace('\n', '')
-    fan_duel = fan_duel.replace('\n','')
-    matchups = matchups.replace('\n','')
-                              
-    cur.execute(offensive)
-    cur.execute(dst)
-    cur.execute(k)
-    cur.execute(fan_duel)
-    cur.execute(matchups)
-    conn.close()
-
-
-def write_db(players, conn, tbl_name):
+    def is_open(self):
+        '''
+        Check to see if connection is open
+        '''
+        return self.is_open
     
-    with conn:
-        cur = conn.cursor()
-        cur.execute('PRAGMA table_info({})'.format(tbl_name))
-        data = cur.fetchall()
+    def write_db(self, players, tbl_name):
+        '''
+        Write player info to DB.  Note that players will be a list of
+        dictionaries, whose keys must match the fields in the table located
+        at tbl_name
+        '''
+        
+        self.cur.execute('PRAGMA table_info({})'.format(tbl_name))
+        data = self.cur.fetchall()
         fields = [x[1] for x in data]
+            
+        # check to make sure that fields in DB match up with keys
+        if len(players) == 0:
+            return
+        else:
+            if set(players[0].keys()) != set(fields):
+                raise DBError('Keys do not match DB fields!')
+            
         n_f = len(fields)
         query_string = 'insert into ' + tbl_name + ' values(' + '?,'*(n_f-1) + '?)'
         for player in players:
             vals = [player[x] for x in fields]
-            cur.execute(query_string, vals)
+            self.cur.execute(query_string, vals)
 
-def read_players_db(db_name, tbl_name, week):
-    """
-    Read in player salary data / predictions from sqlite database named db_name 
-    for a give week (give a citation for this code ... zetcode). Database table 
-    is assumed to have colnames (name, team, pos, salary, pred_points)
-    """
     
-    conn = lite.connect(db_name)
-
-    with conn:
-        conn.row_factory = lite.Row
-        cur = conn.cursor()
+    def read_table(self, tbl_name, week):
+        """
+         Read in data from a table as a list of dictionaries
+        """
+        
+        # Get field names
+        self.cur.execute('PRAGMA table_info({})'.format(tbl_name))
+        data = self.cur.fetchall()
+        fields = [x[1] for x in data]
+        
+        # Get rows matching criteria
+        self.conn.row_factory = lite.Row
         query = 'select * from ' + tbl_name + ' where week = ' + str(week)
-        cur.execute(query)
-        rows = cur.fetchall()
-
-    players = []
-    for row in rows:
-        player = {'name': row['name'], 
-                  'team': row['team'], 
-                  'pos': row['pos'], 
-                  'salary': row['salary'], 
-                  'pred_points': row['pred_points']
-                 }
-        players.append(player)
+        self.cur.execute(query)
+        rows = self.cur.fetchall()
+        
+        # Convert tuples to dict
+        players = []
+        for row in rows:
+            player = dict(zip(fields, row))
+            players.append(player)
     
-    conn.close()
-    return players
-  
+        return players
+    
+    def initialize_new_db(self):
+        '''
+        Function to initialize tables in a databse to hold fantasy football 
+        data.  This function will only ever be used once in the lifetime of a
+        database.
+        '''
+        
+        # Check to see if there are tables, and promp user to continue
+        query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY Name"
+        self.cur.execute(query)
+        if len(self.cur.fetchall()) != 0:
+            warn_string = 'Non-empty database: Continue to create new tables? '
+            warn_string += 'Y/N '
+            response = raw_input(warn_string)
+            if response.upper() != 'Y':
+                return 0
+        
+        offensive = '''CREATE TABLE offensive(name TEXT,
+                                              team TEXT,
+                                              pos TEXT,
+                                              pass_att REAL,
+                                              pass_cmp REAL,
+                                              pass_int REAL,
+                                              pass_rating REAL,
+                                              pass_td REAL,
+                                              pass_yd REAL,
+                                              rush_att REAL,
+                                              rush_avg REAL,
+                                              rush_yd REAL,
+                                              rush_td REAL,
+                                              rec_target REAL,
+                                              rec_reception REAL,
+                                              rec_yd REAL,
+                                              rec_td REAL,
+                                              rec_avg REAL,
+                                              fumble_lost REAL,
+                                              week REAL)'''
+    
+        dst = '''CREATE TABLE dst(name TEXT,
+                                  team TEXT,
+                                  int REAL, 
+                                  sty REAL,
+                                  sacks REAL,
+                                  tk REAL,
+                                  dfr REAL,
+                                  ff REAL,
+                                  dtd REAL,
+                                  paneta REAL,
+                                  ruyda REAL,
+                                  tyda REAL,
+                                  pa REAL,
+                                  week REAL)
+            '''
+    
+        k = '''CREATE TABLE kicker(name TEXT,
+                                   team TEXT,
+                                   fg REAL,
+                                   fga REAL,
+                                   fglg REAL,
+                                   xp REAL,
+                                   xpatt REAL,
+                                   xpb REAL,
+                                   week REAL)
+            '''
+    
+        fan_duel = '''CREATE TABLE fan_duel(name TEXT,
+                                            team TEXT,
+                                            pos TEXT,
+                                            opp TEXT,
+                                            location TEXT,
+                                            injury TEXT,
+                                            ml REAL,
+                                            ou REAL,
+                                            spread REAL,
+                                            salary REAL,
+                                            pred_points REAL,
+                                            week REAL)
+                  '''
+        matchups = ''' CREATE TABLE matchups(away TEXT,
+                                             away_score REAL,
+                                             home TEXT,
+                                             home_score REAL,
+                                             week REAL)
+                   '''
+        offensive = offensive.replace('\n','')
+        dst = dst.replace('\n', '')
+        k = k.replace('\n', '')
+        fan_duel = fan_duel.replace('\n','')
+        matchups = matchups.replace('\n','')
+                              
+        self.cur.execute(offensive)
+        self.cur.execute(dst)
+        self.cur.execute(k)
+        self.cur.execute(fan_duel)
+        self.cur.execute(matchups)
+
+
+def read_fanduel_data(fname):
+    '''
+    The "flatfile" version of FantasyDB.read_fan_duel. Entries in file must be 
+    separated by '|' and have col names: name, team, pos, salary pred_points
+    '''
+    pass
+    
 
 def main():
     pass
