@@ -6,11 +6,12 @@ Created on Tue Dec  1 21:22:11 2015
 """
 
 import sqlite3 as lite
+from csv import DictReader
 
 class DBError(Exception):
     pass
 
-class Fantasy_DB(lite.Connection):
+class FantasyDB(lite.Connection):
     '''
     Database connection class to handle DB read/write operations specific
     to this project.
@@ -139,36 +140,36 @@ class Fantasy_DB(lite.Connection):
                                    week REAL)
             '''
     
-        fan_duel = '''CREATE TABLE fan_duel(name TEXT,
-                                            team TEXT,
-                                            pos TEXT,
-                                            opp TEXT,
-                                            location TEXT,
-                                            injury TEXT,
-                                            ml REAL,
-                                            ou REAL,
-                                            spread REAL,
-                                            salary REAL,
-                                            pred_points REAL,
-                                            week REAL)
-                  '''
-        matchups = ''' CREATE TABLE matchups(away TEXT,
-                                             away_score REAL,
-                                             home TEXT,
-                                             home_score REAL,
-                                             week REAL)
-                   '''
+#        fan_duel = '''CREATE TABLE fan_duel(name TEXT,
+#                                            team TEXT,
+#                                            pos TEXT,
+#                                            opp TEXT,
+#                                            location TEXT,
+#                                            injury TEXT,
+#                                            ml REAL,
+#                                            ou REAL,
+#                                            spread REAL,
+#                                            salary REAL,
+#                                            pred_points REAL,
+#                                            week REAL)
+#                  '''
+#        matchups = ''' CREATE TABLE matchups(away TEXT,
+#                                             away_score REAL,
+#                                             home TEXT,
+#                                             home_score REAL,
+#                                             week REAL)
+#                   '''
         offensive = offensive.replace('\n','')
         dst = dst.replace('\n', '')
         k = k.replace('\n', '')
-        fan_duel = fan_duel.replace('\n','')
-        matchups = matchups.replace('\n','')
+#        fan_duel = fan_duel.replace('\n','')
+#        matchups = matchups.replace('\n','')
                               
         self.cur.execute(offensive)
         self.cur.execute(dst)
         self.cur.execute(k)
-        self.cur.execute(fan_duel)
-        self.cur.execute(matchups)
+#        self.cur.execute(fan_duel)
+#        self.cur.execute(matchups)
 
 
 def read_fanduel_data(fname):
@@ -176,8 +177,21 @@ def read_fanduel_data(fname):
     The "flatfile" version of FantasyDB.read_fan_duel. Entries in file must be 
     separated by '|' and have col names: name, team, pos, salary pred_points
     '''
-    pass
+    with open(fname, 'r') as f:
+        field_names = f.readline().strip('\n').split('|')                                                                       
+        raw_li = list(DictReader(f, delimiter='|', fieldnames=field_names))
     
+    player_li = []
+    for x in raw_li:
+        player = {'name': x['name'], 
+                  'pos': x['pos'],
+                  'pred_points': float(x['pred_points']),
+                  'salary': float(x['salary']), 
+                  'team': x['team']}
+        player_li.append(player)
+
+    return player_li
+        
 
 def main():
     pass

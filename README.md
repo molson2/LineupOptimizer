@@ -18,10 +18,6 @@
 
 # Refined Todo #
 
-* Make DB read/write into class
-* Create a "read player from CSV" function
-* Create more graceful CVX exit status
-* Retool read_table so that it reads in a general table (as write_db is general!)
 * Standalone script to read in data
   - check to see what week it is, if we have data from that week, etc.
 * Unit-testing
