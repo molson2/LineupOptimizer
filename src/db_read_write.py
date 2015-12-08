@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec  1 21:22:11 2015
-
-@author: matthewolson
-"""
+'''
+Matt Olson
+Implement a database class that makes it more convenient to store fantasy
+football in an sqlite3 database with a specific structure
+'''
 
 import sqlite3 as lite
 from csv import DictReader
 
+
 class DBError(Exception):
     pass
+
 
 class FantasyDB(lite.Connection):
     '''
@@ -52,9 +54,9 @@ class FantasyDB(lite.Connection):
 
     
     def read_table(self, tbl_name, week):
-        """
+        '''
          Read in data from a table as a list of dictionaries
-        """
+        '''
         
         # Get field names
         self.cur.execute('PRAGMA table_info({})'.format(tbl_name))
@@ -140,36 +142,36 @@ class FantasyDB(lite.Connection):
                                    week REAL)
             '''
     
-#        fan_duel = '''CREATE TABLE fan_duel(name TEXT,
-#                                            team TEXT,
-#                                            pos TEXT,
-#                                            opp TEXT,
-#                                            location TEXT,
-#                                            injury TEXT,
-#                                            ml REAL,
-#                                            ou REAL,
-#                                            spread REAL,
-#                                            salary REAL,
-#                                            pred_points REAL,
-#                                            week REAL)
-#                  '''
-#        matchups = ''' CREATE TABLE matchups(away TEXT,
-#                                             away_score REAL,
-#                                             home TEXT,
-#                                             home_score REAL,
-#                                             week REAL)
-#                   '''
+        fan_duel = '''CREATE TABLE fan_duel(name TEXT,
+                                            team TEXT,
+                                            pos TEXT,
+                                            opp TEXT,
+                                            location TEXT,
+                                            injury TEXT,
+                                            ml REAL,
+                                            ou REAL,
+                                            spread REAL,
+                                            salary REAL,
+                                            pred_points REAL,
+                                            week REAL)
+                  '''
+        matchups = ''' CREATE TABLE matchups(away TEXT,
+                                             away_score REAL,
+                                             home TEXT,
+                                             home_score REAL,
+                                             week REAL)
+                   '''
         offensive = offensive.replace('\n','')
         dst = dst.replace('\n', '')
         k = k.replace('\n', '')
-#        fan_duel = fan_duel.replace('\n','')
-#        matchups = matchups.replace('\n','')
+        fan_duel = fan_duel.replace('\n','')
+        matchups = matchups.replace('\n','')
                               
         self.cur.execute(offensive)
         self.cur.execute(dst)
         self.cur.execute(k)
-#        self.cur.execute(fan_duel)
-#        self.cur.execute(matchups)
+        self.cur.execute(fan_duel)
+        self.cur.execute(matchups)
 
 
 def read_fanduel_data(fname):

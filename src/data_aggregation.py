@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec  1 21:30:35 2015
-
-@author: matthewolson
-"""
+'''
+Matt Olson
+Collection of webscrapers to get weekly statistics from every player in the NFL
+as well as FanDuel price data
+'''
 
 import requests
 from bs4 import BeautifulSoup

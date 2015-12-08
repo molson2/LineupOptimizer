@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec  1 18:56:00 2015
-
-@author: matthewolson
-"""
+'''
+Matt Olson
+Find optimal lineup given player projections and salaries.  Solve an integer
+program using GUROBI solver interfacted with CVXPY
+'''
 import cvxpy as cvx
 import numpy as np
 from scipy import sparse
@@ -14,40 +14,55 @@ class LineupError(Exception):
 
 class Lineup(object):
     '''
-    Object to organize lineups neatly
+    Object to organize a lineup and display it more nicely
     '''
     def __init__(self, player_list, indicator):
         self.players = [player_list[i] for (i,x) in enumerate(indicator) if x > 0]
         
     def get_total_points(self):
+        '''
+        Get the number of projected points for a lineup
+        '''
         return sum([player['pred_points'] for player in self.players])
     
     def get_players(self):
+        '''
+        Return a list of player names
+        '''
         return [player['name'] for player in self.players]
-
+    
+    def get_salary(self):
+        return sum([player['salary'] for player in self.players])
+    
+    def __str__(self):
+        rep = ''
+        for player in self.players:
+            rep = rep + player['pos'] + ': ' + player['name'] + '\n'
+        return rep
+        
 
 def optimize_lineup(player_list, force_in, force_out, salary_cap):
-    """
+    '''
     Maximize fantasy points subject to salary cap and position constraints
     Args:
         player_list: list of dictionaries with keys: name, team, pos, salary
                      pred_points
         force_in: list of player names to force in lineup
         force_out: list of player names to exclude from lineup
-    """
+    '''
     
     def position_constraint(player_list, pos):
-        """
+        '''
         Helper function to create a sparse position constraint matrix
-        """
+        '''
         A = np.array(map(lambda x: x['pos'] == pos, player_list), dtype=np.intp)
         return A
     
     def force_constraint(player_list, force_list):
-        """
+        '''
         Helper function to create a sparse matrix for force in/out player 
         constraint
-        """
+        '''
         n_force = len(force_list)
         n_players = len(player_list)
         V = np.ones(n_force)

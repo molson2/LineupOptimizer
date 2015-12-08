@@ -1,17 +1,18 @@
-"""
-Demo
-"""
+'''
+Matt Olson
+Demo script for lineup optimization project
+'''
 
 from data_aggregation import *
 from db_read_write import *
 from optimization import *
 
 # Create DB and write to
-db_name = 'jundb'
-week_fd = 13
-week = 12
+db_name = 'junkdb'
+week_fd = 14
+week = 13
 
-db = Fantasy_DB(db_name)
+db = FantasyDB(db_name)
 db.initialize_new_db()
 
 # Get data
@@ -38,34 +39,20 @@ db.write_table(matchup, 'matchups')
 players = db.read_table('fan_duel', week_fd)
 db.close()
 
-# Do the optimizatoin
+# Do the optimization
 force_in = []
 force_out = []
-salary_cap = 100000
+salary_cap = 60000
+lineup1 = optimize_lineup(players, force_in, force_out, salary_cap)
+print(lineup1)
+lineup1.get_total_points()
 
-lineup = optimize_lineup(players, force_in, force_out, salary_cap)
-lineup.get_players()
-lineup.get_total_points()
-
-# write fan_duel data to pipe separated file
-fname = 'fd_flat'
-
-def write_as_txt(fname, players):
-    with open('fd_flat', 'w') as f:
-        f.writelines('name|team|pos|salary|pred_points\n')
-        for player in fan_duel:
-            info = [player['name'], player['team'], player['pos'], 
-                    player['salary'], player['pred_points']]
-            f.writelines('{}|{}|{}|{}|{}\n'.format(*info))
-
-# and read to check!
-fan_duel2 = read_fanduel_data(fname)
-
-lineup = optimize_lineup(fan_duel2, force_in, force_out, salary_cap)
-lineup.get_players()
-lineup.get_total_points()
-
-
-
+# Get a second lineup
+force_in = ['Cutler, Jay', 'Forte, Matt'] # force in two players
+force_out = [player['name'] for player in players if player['team'] == 'PHI']
+salary_cap = 60000
+lineup2 = optimize_lineup(players, force_in, force_out, salary_cap)
+print(lineup2)
+lineup2.get_total_points()
 
 
