@@ -48,11 +48,9 @@ print(lineup1)
 lineup1.get_total_points()
 
 # Get a second lineup
-force_in = ['Cutler, Jay', 'Forte, Matt'] # force in two players
-force_out = [player['name'] for player in players if player['team'] == 'PHI']
+force_in = ['Cutler, Jay', 'Forte, Matt']  # force in two players
+force_out = [player['name'] for player in players if player['team'] == 'BUF']
 salary_cap = 60000
 lineup2 = optimize_lineup(players, force_in, force_out, salary_cap)
 print(lineup2)
 lineup2.get_total_points()
-
-

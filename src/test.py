@@ -9,6 +9,7 @@ from data_aggregation import *
 from db_read_write import *
 from optimization import *
 
+
 def write_as_txt(fname, players):
     '''
     Function to create a txt file so that we can check the 'read_fanduel_data'
@@ -17,15 +18,15 @@ def write_as_txt(fname, players):
     with open(fname, 'w') as f:
         f.writelines('name|team|pos|salary|pred_points\n')
         for player in players:
-            info = [player['name'], player['team'], player['pos'], 
+            info = [player['name'], player['team'], player['pos'],
                     player['salary'], player['pred_points']]
             f.writelines('{}|{}|{}|{}|{}\n'.format(*info))
 
-            
+
 class ProjectTests(unittest.TestCase):
     def setUp(self):
         pass
-    
+
     def test_text_read(self):
         '''
         Test standalone text file function
@@ -49,11 +50,11 @@ class ProjectTests(unittest.TestCase):
         db = FantasyDB('../fantasyFootball2015.db')
         players = db.read_table('fan_duel', 14)
         db.close()
-        
-        # Should be able to get at least 100 points        
+
+        # Should be able to get at least 100 points
         lineup1 = optimize_lineup(players, [], [], 60000)
         self.assertGreater(lineup1.get_total_points(), 100)
-        
+
         # Check that salary cap is respected
         self.assertLessEqual(lineup1.get_salary(), 60001)
         # Check for forced_in/out players
@@ -64,12 +65,10 @@ class ProjectTests(unittest.TestCase):
 
         with self.assertRaisesRegexp(Exception, err_msg):
             lineup3 = optimize_lineup(players, [], [], 0)
-        
-     
-def main():                                                                      
-    unittest.main()                                                              
-                                                                                 
-if __name__ == '__main__':                                                       
-    main() 
 
-    
+
+def main():
+    unittest.main()
+
+if __name__ == '__main__':
+    main()
