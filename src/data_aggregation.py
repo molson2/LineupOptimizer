@@ -226,6 +226,22 @@ def get_matchup(week):
     return games
 
 
+def get_all_stats(week):
+    '''
+    Returns a dict, whose key-value pairs are (position, player_dictionary).
+    Functions as a wrapper for pulling in data from every position
+    '''
+    qb = get_offensive_data(week, 'QB')
+    rb = get_offensive_data(week, 'RB')
+    wr = get_offensive_data(week, 'WR')
+    te = get_offensive_data(week, 'TE')
+    matchup = get_matchup(week)
+    dst = get_dst_data(week)
+    kicker = get_kicker_data(week)
+    return {'qb': qb, 'rb': rb, 'wr': wr, 'te': te, 'matchup': matchup,
+            'dst': dst, 'kicker': kicker}
+
+
 def main():
     pass
 if __name__ == "__main__":

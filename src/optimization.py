@@ -43,7 +43,7 @@ class Lineup(object):
         return rep
 
 
-def optimize_lineup(player_list, force_in, force_out, salary_cap):
+def optimize_lineup(player_list, force_in=[], force_out=[], salary_cap=60000):
     '''
     Maximize fantasy points subject to salary cap and position constraints
     Args:
@@ -52,6 +52,9 @@ def optimize_lineup(player_list, force_in, force_out, salary_cap):
         force_in: list of player names to force in lineup
         force_out: list of player names to exclude from lineup
     '''
+    # You need a GUROBI license to run this code
+    if 'GUROBI' not in cvx.installed_solvers():
+        raise Exception('GUROBI license required to use this function!')
 
     def position_constraint(player_list, pos):
         '''
